@@ -1,43 +1,74 @@
 import pygame
 from pygame.locals import *
 from OpenGL.GL import *
+from OpenGL.GLUT import *
 from OpenGL.GLU import *
-def LineBres(X1, Y1, X2, Y2):
-glClear(GL_COLOR_BUFFER_BIT)
-dx, dy = abs(X2 - X1), abs(Y2 - Y1)
-p, twoDy, twoDyDx = 2 * dy - dx, 2 * dy, 2 * (dy - dx)
-x, y = (X2, Y2) if X1 > X2 else (X1, Y1)
-X2 = max(X1, X2)
-glBegin(GL_POINTS)
-glVertex2i(x, y)
-while x < X2:
-x, p = x + 1, p + (twoDy if p < 0 else twoDyDx)
-if p >= 0: y += 1
-glVertex2i(x, y)
-glEnd()
-glFlush()
-def Init():
-glClearColor(1.0, 1.0, 1.0, 0)
-glColor3f(0.0, 0.0, 0.0)
-glPointSize(4.0)
-glViewport(0, 0, 300, 400)
-glMatrixMode(GL_PROJECTION)
-glLoadIdentity()
-gluOrtho2D(0, 300, 0, 400)
+
+def draw_square():
+    # Draw a square
+    glBegin(GL_QUADS)
+    glVertex2f(-0.5, -0.5)
+    glVertex2f(0.5, -0.5)
+    glVertex2f(0.5, 0.5)
+    glVertex2f(-0.5, 0.5)
+    glEnd()
+
 def main():
-pygame.init()
-pygame.display.set_mode((700, 700), DOUBLEBUF | OPENGL)
-Init()
-X1, Y1 = map(int, input("Enter X1, Y1: ").split())
-X2, Y2 = map(int, input("Enter X2, Y2: ").split())
-running = True
-while running:
-for event in pygame.event.get():
-if event.type == pygame.QUIT:
-running = False
-LineBres(X1, Y1, X2, Y2)
-pygame.display.flip()
-pygame.time.wait(100)
-pygame.quit()
+    # Pygame initialization
+    pygame.init()
+    display = (800, 600)
+    pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
+    gluOrtho2D(-2, 2, -2, 2)  # Set up 2D orthographic projection
+
+    # Initial transformation parameters
+    translate_x = 0
+    translate_y = 0
+    angle = 0
+    scale = 1
+
+    # Pygame clock for controlling frame rate
+    clock = pygame.time.Clock()
+
+    # Main loop
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+            # Handle keyboard input for transformations
+            if event.type == KEYDOWN:
+                if event.key == K_LEFT:
+                    translate_x -= 0.1
+                if event.key == K_RIGHT:
+                    translate_x += 0.1
+                if event.key == K_DOWN:
+                    translate_y -= 0.1
+                if event.key == K_UP:
+                    translate_y += 0.1
+                if event.key == K_q:
+                    angle += 5
+                if event.key == K_e:
+                    angle -= 5
+                if event.key == K_w:
+                    scale += 0.1
+                if event.key == K_s:
+                    scale -= 0.1
+
+        # Clear the screen
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        
+        # Apply the transformations to the square
+        glPushMatrix()
+        glTranslatef(translate_x, translate_y, 0)
+        glRotatef(angle, 0, 0, 1)
+        glScalef(scale, scale, 1)
+        draw_square()  # Draw the square
+        glPopMatrix()
+
+        # Update the display and control frame rate
+        pygame.display.flip()
+        clock.tick(60)
+
+# Execute the main function if the script is run directly
 if __name__ == "__main__":
-main()
+    main()
